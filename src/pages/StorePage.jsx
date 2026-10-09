@@ -29,7 +29,7 @@ export default function StorePage() {
     const term = search.trim().toLocaleLowerCase('pt-BR')
     if (!term) return products
     return products.filter(p =>
-      `${p.name} ${p.description ?? ''}`.toLocaleLowerCase('pt-BR').includes(term),
+      `${p.name} ${p.brand ?? ''} ${p.description ?? ''}`.toLocaleLowerCase('pt-BR').includes(term),
     )
   }, [products, search])
 

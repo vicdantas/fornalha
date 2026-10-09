@@ -1,75 +1,118 @@
-// Cadastra no Appwrite os produtos do catálogo oficial (PDF do proprietário).
+// Cadastra no Appwrite os produtos da lista oficial (planilha de fornecedores do proprietário).
 //
 // Uso:
-//   node --env-file=.env scripts/seed-products.mjs           # só mostra o que faria
-//   node --env-file=.env scripts/seed-products.mjs --apply   # grava de verdade
+//   npm run seed:products                      # só mostra o que faria
+//   npm run seed:products -- --apply           # grava de verdade
+//   npm run seed:products -- --apply --prune   # e remove do banco o que saiu da lista
 //
-// Requer APPWRITE_API_KEY (chave de servidor com escopo rows.write / documents.write)
-// no .env — sem prefixo VITE_, para nunca ir parar no bundle do front.
-// Produtos já cadastrados (mesmo nome + preço) são pulados, então pode rodar de novo.
+// Requer APPWRITE_API_KEY (chave de servidor) no .env — sem prefixo VITE_, para
+// nunca ir parar no bundle do front. Produtos já cadastrados (mesmo nome, marca e
+// preço) são pulados, então pode rodar de novo. --prune nunca apaga produto com foto.
 
+// [nome, preço, unidade, peso/porção]
 const PRODUCTS = {
-  bovino: [
-    // Picanha e Chorizo aparecem duas vezes no PDF com preços diferentes:
-    // confirmar com o dono a diferença (marca/padrão) e renomear.
-    ['Picanha', 119.9, 'kg'],
-    ['Chorizo', 79.9, 'kg'],
-    ['Fraldinha', 84.9, 'kg'],
-    ['Picanha', 109.9, 'kg'],
-    ['Chorizo', 89.9, 'kg'],
-    ['Contra-filé', 69.9, 'kg'],
-    ['Maminha', 69.9, 'peca'],
-    ['Shoulder', 99.9, 'peca'],
-    ['Peixinho', 69.9, 'peca'],
-  ],
-  acompanhamento: [
-    ['Carvão', 14.9, 'un'],
-    ['Batata Air Fryer', 19.9, 'un'],
-    ['Farofa Tradicional', 14.9, 'un'],
-    ['Farofa de Alho', 14.9, 'un'],
-    ['Farofa de Bacon', 14.9, 'un'],
-    ['Farofa de Banana', 14.9, 'un'],
-    ['Farofa de Costelinha com Limão', 14.9, 'un'],
-    ['Farofa Picante', 14.9, 'un'],
-    ['Farofa de Provolone', 14.9, 'un'],
-    ['Farofa de Torresmo', 14.9, 'un'],
-  ],
-  tempero: [
-    ['Sal de Parrilla Tradicional', 12.9, 'un'],
-    ['Sal de Parrilla com Alho', 12.9, 'un'],
-    ['Sal de Parrilla com Bacon', 12.9, 'un'],
-    ['Sal de Parrilla com Chimichurri', 12.9, 'un'],
-    ['Sal de Parrilla com Lemon Pepper', 12.9, 'un'],
-    ['Sal de Parrilla com Mostarda e Hortelã', 12.9, 'un'],
-  ],
-  paes_linguicas: [
-    ['Pão de Alho Tradicional', 14.9, 'un'],
-    ['Pão de Alho Picante', 14.9, 'un'],
-    ['Pão de Alho Tradicional Black', 19.9, 'un'],
-    ['Linguiça', 26.9, 'pacote', 'Pacote de 400 g'],
-    ['Linguiça', 29.9, 'pacote', 'Pacote de 700 g'],
-    ['Choripan', 21.9, 'un'],
-    // Queijo Coalho aparece duas vezes no PDF: provavelmente sabores diferentes.
-    ['Queijo Coalho', 24.9, 'un'],
-    ['Queijo Coalho', 24.9, 'un'],
-  ],
-  suino: [
-    ['Costelinha suína com barbecue', 69.9, 'un'],
-    ['Panceta suína', 21.9, 'un'],
-    ['Picanha suína', 21.9, 'un'],
-  ],
-  ave: [
-    ['Coxinha da asa — manjericão e especiarias', 21.9, 'un'],
-    ['Meio da asa — sweet chili', 29.9, 'un'],
-    ['Tulipa na brasa', 34.9, 'un'],
-    ['Filé de sobrecoxa — chimichurri', 33.9, 'un'],
-    ['Coração na brasa', 24.9, 'un'],
-  ],
-  espetinho: [
-    ['Espetinho de carne', 47.9, 'un'],
-    ['Espetinho de kafta', 36.9, 'un'],
-    ['Espetinho de frango', 29.9, 'un'],
-  ],
+  bovino: {
+    Minerva: [
+      ['Estância Picanha', 149.9, 'kg'],
+      ['Estância Chorizo Angus', 89.9, 'kg'],
+      ['Estância Chorizo', 79.9, 'kg'],
+      ['Estância Fraldinha', 84.9, 'kg'],
+      ['Pul Selection Picanha', 99.9, 'kg'],
+      ['Pul Contra-filé', 64.9, 'kg'],
+      ['Maminha Cabaña Las Lilas', 69.9, 'kg'],
+    ],
+    'Carolina Black': [
+      ['Picanha Valencia', 119.9, 'kg'],
+    ],
+  },
+  ave: {
+    'Perdigão / Sadia': [
+      ['Tulipa na brasa', 34.9, 'un'],
+      ['Coração na brasa', 24.9, 'un'],
+    ],
+    Aurora: [
+      ['Filé de sobrecoxa', 24.9, 'un'],
+      ['Coxinha da asa — manjericão', 21.9, 'un'],
+      ['Meio da asa — sweet chili', 29.9, 'un'],
+    ],
+    'Carolina Black': [
+      ['Coxa e sobrecoxa', 33.9, 'un'],
+    ],
+  },
+  suino: {
+    Aurora: [
+      ['Costelinha suína', 69.9, 'un'],
+      ['Picanha suína', 21.9, 'un'],
+      ['Panceta suína', 21.9, 'un'],
+    ],
+  },
+  espetinho: {
+    'Carolina Black': [
+      ['Espetinho bovino', 47.9, 'un'],
+      ['Espetinho de kafta', 36.9, 'un'],
+      ['Espetinho de frango', 29.9, 'un'],
+    ],
+  },
+  paes_linguicas: {
+    'Carolina Black': [
+      ['Pão de alho', 19.9, 'un'],
+      ['Queijo coalho', 25.9, 'un'],
+      ['Linguiça toscana', 26.9, 'pacote', 'Pacote de 400 g'],
+      ['Linguiça na brasa', 29.9, 'pacote', 'Pacote de 700 g'],
+    ],
+    Pinho: [
+      ['Pão de alho Chef', 14.9, 'un'],
+      ['Pão de alho Pimenta', 14.9, 'un'],
+      ['Queijo coalho Quatá', 25.9, 'un'],
+    ],
+    Aurora: [
+      ['Choripan', 21.9, 'un'],
+    ],
+  },
+  acompanhamento: {
+    Poleto: [
+      ['Farofa Tradicional', 14.9, 'un'],
+      ['Farofa de Alho', 14.9, 'un'],
+      ['Farofa de Bacon', 14.9, 'un'],
+      ['Farofa de Banana', 14.9, 'un'],
+      ['Farofa de Costelinha com Limão', 14.9, 'un'],
+      ['Farofa Picante', 14.9, 'un'],
+      ['Farofa de Provolone', 14.9, 'un'],
+      ['Farofa de Torresmo', 14.9, 'un'],
+    ],
+    'Carolina Black': [
+      ['Batata Air Fryer', 19.9, 'un'],
+    ],
+  },
+  tempero: {
+    Poleto: [
+      ['Sal de Parrilla Tradicional', 12.9, 'un'],
+      ['Sal de Parrilla com Alho', 12.9, 'un'],
+      ['Sal de Parrilla com Bacon', 12.9, 'un'],
+      ['Sal de Parrilla com Chimichurri', 12.9, 'un'],
+      ['Sal de Parrilla com Lemon Pepper', 12.9, 'un'],
+      ['Sal de Parrilla com Mostarda e Hortelã', 12.9, 'un'],
+      ['Tempero Steak', 14.9, 'un'],
+    ],
+  },
+  carvao: {
+    '': [
+      ['Carvão', 14.9, 'un'],
+    ],
+    Poleto: [
+      ['Acendedor', 1.9, 'un'],
+      ['Gel acendedor', 12.9, 'un'],
+    ],
+  },
+  bebida: {
+    '': [
+      ['Coca-Cola', 13.9, 'un'],
+      ['Fanta', 10.9, 'un'],
+      ['Fanta Uva', 10.9, 'un'],
+      ['Guaraná', 10.9, 'un'],
+      ['Chá gelado', 13.9, 'un'],
+    ],
+  },
 }
 
 const {
@@ -80,13 +123,16 @@ const {
 } = process.env
 const TABLE_ID = 'products'
 const apply = process.argv.includes('--apply')
+const prune = process.argv.includes('--prune')
 
-const rows = Object.entries(PRODUCTS).flatMap(([category, items], c) =>
-  items.map(([name, price, unit, weight = ''], i) => ({
-    name, category, weight, description: '',
-    price, unit, badge: '', stock: null, imageUrl: '',
-    order: (c + 1) * 100 + i, active: true,
-  })),
+const rows = Object.entries(PRODUCTS).flatMap(([category, brands], c) =>
+  Object.entries(brands)
+    .flatMap(([brand, items]) => items.map(item => [brand, ...item]))
+    .map(([brand, name, price, unit, weight = ''], i) => ({
+      name, brand, category, weight, description: '',
+      price, unit, badge: '', stock: null, imageUrl: '',
+      order: (c + 1) * 100 + i, active: true,
+    })),
 )
 
 // Mesma estratégia do src/lib/appwrite.js: API TablesDB, com fallback para a legada.
@@ -128,9 +174,22 @@ if (!projectId || !dbId || !apiKey) {
 }
 
 const { api, existing } = await listExisting()
-const key = p => `${p.name}|${Number(p.price).toFixed(2)}|${p.weight ?? ''}`
+const key = p => `${p.name}|${p.brand ?? ''}|${p.category}|${Number(p.price).toFixed(2)}|${p.weight ?? ''}`
 const seen = new Map()
 for (const p of existing) seen.set(key(p), (seen.get(key(p)) ?? 0) + 1)
+
+if (prune) {
+  const wanted = new Set(rows.map(key))
+  for (const p of existing) {
+    if (wanted.has(key(p))) continue
+    if (p.imageUrl) {
+      console.log(`  mantido    ${p.name} (fora da lista, mas tem foto)`)
+      continue
+    }
+    if (apply) await call('DELETE', `${api.url}/${p.$id}`)
+    console.log(`  ${apply ? 'removido ' : 'removeria'}  ${p.name}`)
+  }
+}
 
 let created = 0
 for (const row of rows) {
@@ -142,7 +201,7 @@ for (const row of rows) {
     continue
   }
   if (!apply) {
-    console.log(`  criaria    [${row.category}] ${row.name} — R$ ${row.price.toFixed(2)}/${row.unit}`)
+    console.log(`  criaria    [${row.category}] ${row.name}${row.brand && ` (${row.brand})`} — R$ ${row.price.toFixed(2)}/${row.unit}`)
     continue
   }
   await call('POST', api.url, { [api.idKey]: 'unique()', data: row })

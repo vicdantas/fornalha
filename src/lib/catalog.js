@@ -1,4 +1,4 @@
-// Estrutura do catálogo oficial da Fornalha (PDF do proprietário).
+// Estrutura do catálogo oficial da Fornalha (PDF e planilha de fornecedores do proprietário).
 // Loja, card de produto e painel admin leem daqui.
 
 export const CATEGORIES = [
@@ -9,6 +9,8 @@ export const CATEGORIES = [
   { id: 'suino', label: 'Suínos' },
   { id: 'ave', label: 'Aves' },
   { id: 'espetinho', label: 'Espetinhos' },
+  { id: 'carvao', label: 'Carvão e acendedores' },
+  { id: 'bebida', label: 'Bebidas' },
 ]
 
 export const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map(c => [c.id, c.label]))
