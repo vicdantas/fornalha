@@ -1,48 +1,55 @@
-import { X, ShoppingBag, Minus, Plus, Trash2 } from 'lucide-react'
+import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { Button } from './ui/Button'
+import { WhatsappIcon } from './ui/icons'
 
-function fmt(n) {
-  return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-}
+const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function CartItem({ item }) {
   const { changeQty, remove } = useCart()
+
   return (
-    <div className="flex gap-3 py-3.5 border-b border-white/5 last:border-0">
-      <div className="w-14 h-11 rounded bg-navy-2 border border-white/5 shrink-0 flex items-center justify-center">
-        {item.imageUrl
-          ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded" />
-          : <ShoppingBag className="w-5 h-5 text-gold/30" />
-        }
+    <div className="flex gap-3 border-b border-border pb-5 last:border-0 last:pb-0">
+      <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-secondary">
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt="" className="size-full object-cover" />
+        ) : (
+          <ShoppingBag className="size-6 text-primary/40" />
+        )}
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-display text-sm text-white tracking-wide truncate">{item.name}</p>
-        <p className="text-xs text-white/30 mb-2">{item.weight}</p>
-        <div className="flex items-center justify-between">
-          <span className="font-display text-sm text-gold font-bold">{fmt(item.price * item.qty)}</span>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => changeQty(item.$id, -1)}
-              className="w-6 h-6 rounded border border-white/10 text-white/60 hover:border-gold/40 hover:text-gold flex items-center justify-center transition-colors"
-            >
-              <Minus className="w-3 h-3" />
-            </button>
-            <span className="w-6 text-center text-sm font-semibold text-white">{item.qty}</span>
-            <button
-              onClick={() => changeQty(item.$id, 1)}
-              className="w-6 h-6 rounded border border-white/10 text-white/60 hover:border-gold/40 hover:text-gold flex items-center justify-center transition-colors"
-            >
-              <Plus className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => remove(item.$id)}
-              className="w-6 h-6 rounded border border-white/5 text-white/20 hover:border-red-500/40 hover:text-red-400 flex items-center justify-center ml-1 transition-colors"
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          </div>
+
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-sm font-semibold">{item.name}</h3>
+        <p className="mt-1 text-sm text-primary">{money.format(item.price)}</p>
+        <div className="mt-2 flex items-center gap-1">
+          <Button
+            variant="secondary"
+            size="icon-sm"
+            onClick={() => changeQty(item.$id, -1)}
+            aria-label={`Diminuir ${item.name}`}
+          >
+            <Minus />
+          </Button>
+          <span className="w-8 text-center text-sm">{item.qty}</span>
+          <Button
+            variant="secondary"
+            size="icon-sm"
+            onClick={() => changeQty(item.$id, 1)}
+            aria-label={`Aumentar ${item.name}`}
+          >
+            <Plus />
+          </Button>
         </div>
       </div>
+
+      <Button
+        variant="destructive"
+        size="icon"
+        onClick={() => remove(item.$id)}
+        aria-label={`Remover ${item.name}`}
+      >
+        <Trash2 />
+      </Button>
     </div>
   )
 }
@@ -50,75 +57,80 @@ function CartItem({ item }) {
 export function CartDrawer() {
   const { items, open, setOpen, total, count, clear, checkout } = useCart()
 
+  if (!open) return null
+
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/70 z-50 transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+    <div className="fixed inset-0 z-50">
+      <button
+        className="absolute inset-0 animate-fade-in bg-overlay"
+        aria-label="Fechar carrinho"
         onClick={() => setOpen(false)}
       />
 
-      {/* Drawer */}
-      <div className={`fixed top-0 right-0 bottom-0 w-full max-w-sm bg-navy border-l border-white/5 z-50 flex flex-col shadow-2xl transition-transform duration-300 ${open ? 'translate-x-0' : 'translate-x-full'}`}>
-        {/* Head */}
-        <div className="flex items-center justify-between px-5 py-4 bg-ink border-b border-white/5">
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Meu pedido"
+        className="absolute right-0 top-0 flex h-full w-full max-w-md animate-slide-in-right flex-col border-l border-border bg-background shadow-2xl"
+      >
+        <div className="flex h-20 items-center justify-between border-b border-border px-5">
           <div>
-            <p className="font-display text-gold font-bold tracking-widest text-sm">FORNALHA</p>
-            <p className="text-xs text-white/30 mt-0.5">Seu pedido · {count} {count === 1 ? 'item' : 'itens'}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Fornalha</p>
+            <h2 className="text-xl font-semibold">Meu pedido</h2>
           </div>
-          <button onClick={() => setOpen(false)} className="text-white/30 hover:text-white transition-colors p-1">
-            <X className="w-5 h-5" />
-          </button>
+          <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Fechar">
+            <X />
+          </Button>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin px-5 py-2">
+        <div className="flex-1 overflow-y-auto scrollbar-thin p-5">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
-              <div className="w-16 h-16 rounded-full border border-white/5 flex items-center justify-center">
-                <ShoppingBag className="w-7 h-7 text-white/10" />
-              </div>
-              <p className="text-sm text-white/30 leading-relaxed">Seu carrinho está vazio.<br />Adicione cortes para continuar.</p>
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <ShoppingBag className="mb-4 size-10 text-primary" />
+              <h3 className="text-lg font-semibold">Seu pedido está vazio</h3>
+              <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+                Adicione os cortes que deseja e finalize pelo WhatsApp.
+              </p>
+              <Button className="mt-6" onClick={() => setOpen(false)}>
+                Explorar catálogo
+              </Button>
             </div>
           ) : (
-            items.map(item => <CartItem key={item.$id} item={item} />)
+            <div className="space-y-5">
+              {items.map(item => (
+                <CartItem key={item.$id} item={item} />
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Footer */}
         {items.length > 0 && (
-          <div className="px-5 py-4 bg-ink border-t border-white/5">
-            <div className="flex justify-between items-baseline mb-1">
-              <span className="text-xs text-white/40">Subtotal</span>
-              <span className="text-xs text-white/40">{fmt(total)}</span>
+          <div className="border-t border-border bg-secondary p-5">
+            <div className="mb-1 flex items-center justify-between text-sm text-muted-foreground">
+              <span>
+                {count} {count === 1 ? 'item' : 'itens'}
+              </span>
+              <span>Subtotal</span>
             </div>
-            <div className="flex justify-between items-baseline pb-3 border-b border-white/5 mb-3">
-              <span className="text-xs text-white/40">Entrega</span>
-              <span className="text-xs text-white/40">A confirmar</span>
+            <div className="mb-5 text-right font-display text-3xl font-semibold">
+              {money.format(total)}
             </div>
-            <div className="flex justify-between items-baseline mb-1">
-              <span className="text-sm font-semibold text-white">Total estimado</span>
-              <span className="font-display text-xl font-bold text-gold">{fmt(total)}</span>
-            </div>
-            <p className="text-[11px] text-white/20 mb-4 leading-relaxed">
-              Disponibilidade e frete confirmados pelo WhatsApp após envio. Atendemos seg–sáb, 8h–18h.
+
+            <Button variant="whatsapp" size="lg" className="w-full" onClick={checkout}>
+              <WhatsappIcon /> Finalizar no WhatsApp
+            </Button>
+
+            <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">
+              Disponibilidade, peso e valor final serão confirmados no atendimento.
+              Atendemos de segunda a sábado, das 8h às 18h.
             </p>
-            <button
-              onClick={checkout}
-              className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-white font-bold text-sm py-3.5 rounded-md transition-colors"
-            >
-              <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.121 1.534 5.852L.052 23.99l6.328-1.451A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.37l-.359-.213-3.754.861.878-3.65-.233-.374A9.818 9.818 0 0112 2.182 9.818 9.818 0 0121.818 12 9.818 9.818 0 0112 21.818z"/>
-              </svg>
-              Finalizar pelo WhatsApp
-            </button>
-            <button onClick={clear} className="w-full text-center text-xs text-white/20 hover:text-red-400 mt-3 transition-colors">
-              Limpar carrinho
-            </button>
+
+            <Button variant="ghost" onClick={clear} className="mt-2 w-full">
+              Limpar pedido
+            </Button>
           </div>
         )}
-      </div>
-    </>
+      </aside>
+    </div>
   )
 }

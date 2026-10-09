@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed:products": "node --env-file=.env scripts/seed-products.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.103.1",

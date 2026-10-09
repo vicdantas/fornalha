@@ -1,22 +1,19 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Search, ChevronRight, MapPin, Clock, Phone } from 'lucide-react'
+import { ChevronRight, Clock, Flame, MapPin, Phone, Search } from 'lucide-react'
 import { Navbar } from '../components/Navbar'
 import { ProductCard } from '../components/ProductCard'
 import { CartDrawer } from '../components/CartDrawer'
-import { getProducts } from '../lib/appwrite'
 import { Logo } from '../components/Logo'
+import { Button } from '../components/ui/Button'
+import { InstagramIcon } from '../components/ui/icons'
+import { getProducts } from '../lib/appwrite'
+import { CATEGORIES as CATALOG_CATEGORIES } from '../lib/catalog'
 
-const CATEGORIES = [
-  { id: 'all',       label: 'Todos' },
-  { id: 'ofertas',   label: 'Ofertas' },
-  { id: 'bovino',    label: 'Bovinos' },
-  { id: 'premium',   label: 'Premium' },
-  { id: 'dryaged',   label: 'Dry Aged' },
-  { id: 'kit',       label: 'Kits' },
-  { id: 'suino',     label: 'Suínos' },
-  { id: 'embutidos', label: 'Embutidos' },
-]
+const HERO_IMAGE =
+  'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1920&q=80'
+
+const CATEGORIES = [{ id: 'all', label: 'Todos' }, ...CATALOG_CATEGORIES]
 
 export default function StorePage() {
   const [category, setCategory] = useState('all')
@@ -29,168 +26,222 @@ export default function StorePage() {
   })
 
   const filtered = useMemo(() => {
-    if (!search) return products
-    const s = search.toLowerCase()
-    return products.filter(p => p.name.toLowerCase().includes(s) || p.description?.toLowerCase().includes(s))
+    const term = search.trim().toLocaleLowerCase('pt-BR')
+    if (!term) return products
+    return products.filter(p =>
+      `${p.name} ${p.description ?? ''}`.toLocaleLowerCase('pt-BR').includes(term),
+    )
   }, [products, search])
 
   return (
-    <div className="min-h-screen bg-ink">
+    <main className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Navbar onSearch={setSearch} />
       <CartDrawer />
 
       {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/90 to-transparent z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink to-transparent z-10" />
-        {/* Background image placeholder — substitua por uma foto real */}
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-50"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1400&q=80')" }}
+      <section className="relative min-h-[540px] overflow-hidden border-b border-border bg-[radial-gradient(120%_120%_at_72%_45%,#4a2a0c_0%,#1c1008_48%,#0b0706_100%)]">
+        <img
+          src={HERO_IMAGE}
+          alt="Cortes grelhando sobre a brasa"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
-        <div className="relative z-20 max-w-7xl mx-auto px-4 py-20 md:py-28">
-          <p className="flex items-center gap-2 text-gold text-xs font-semibold tracking-widest uppercase mb-5">
-            <span className="w-5 h-px bg-gold" />
-            Boutique de Carnes
-          </p>
-          <h1 className="font-display text-4xl md:text-6xl font-bold text-white leading-tight max-w-lg mb-5">
-            Cortes que acendem<br />grandes momentos.
-          </h1>
-          <p className="text-white/50 text-base max-w-sm leading-relaxed mb-8">
-            Seleção cuidadosa, procedência e sabor para o seu churrasco. Escolha seus cortes e peça direto pelo WhatsApp.
-          </p>
-          <a
-            href="#catalogo"
-            className="inline-flex items-center gap-2 border border-gold/40 hover:border-gold text-gold text-sm font-semibold px-5 py-2.5 rounded-md transition-colors"
-          >
-            Ver catálogo <ChevronRight className="w-4 h-4" />
-          </a>
+        <div className="absolute inset-0 bg-hero-overlay" />
+
+        <div className="relative mx-auto flex min-h-[540px] max-w-7xl items-center px-4 py-20 sm:px-6">
+          <div className="max-w-xl">
+            <p className="mb-5 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary">
+              <Flame className="size-4" /> Boutique de carnes
+            </p>
+            <h1 className="font-display text-5xl font-semibold leading-[0.98] sm:text-7xl">
+              Cortes que acendem grandes momentos.
+            </h1>
+            <p className="mt-6 max-w-lg text-base leading-7 text-foreground/75 sm:text-lg">
+              Seleção cuidadosa, procedência e sabor para o seu churrasco. Escolha seus cortes e
+              peça direto pelo WhatsApp.
+            </p>
+            <Button as="a" href="#catalogo" size="lg" className="mt-8">
+              Ver catálogo <ChevronRight />
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* CATALOG */}
-      <section id="catalogo" className="max-w-7xl mx-auto px-4 py-10">
-        {/* Header */}
-        <div className="mb-6">
-          <p className="text-[10px] font-bold tracking-widest uppercase text-gold mb-1">Seleção Fornalha</p>
-          <h2 className="font-display text-2xl md:text-3xl text-white font-semibold">Escolha seu corte</h2>
-          <p className="text-xs text-white/30 mt-1">Preços demonstrativos sujeitos à confirmação.</p>
+      {/* CATÁLOGO */}
+      <section id="catalogo" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
+        <div className="mb-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+              Seleção Fornalha
+            </p>
+            <h2 className="mt-2 font-display text-3xl font-semibold text-gold-200 sm:text-4xl">
+              Escolha seu corte
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Preços demonstrativos sujeitos à confirmação.
+            </p>
+          </div>
+
+          <div className="relative md:hidden">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar cortes..."
+              aria-label="Buscar produtos"
+              className="h-11 w-full rounded-md border border-input bg-secondary pl-10 pr-4 text-sm outline-none transition focus:border-primary"
+            />
+          </div>
         </div>
 
-        {/* Category tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none">
+        <div className="mb-8 flex gap-2 overflow-x-auto pb-2 scrollbar-none" aria-label="Categorias">
           {CATEGORIES.map(cat => (
-            <button
+            <Button
               key={cat.id}
+              variant={category === cat.id ? 'default' : 'secondary'}
               onClick={() => setCategory(cat.id)}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                category === cat.id
-                  ? 'bg-gold text-ink font-bold'
-                  : 'border border-white/10 text-white/50 hover:border-white/20 hover:text-white'
-              }`}
+              className="shrink-0"
             >
               {cat.label}
-            </button>
+            </Button>
           ))}
         </div>
 
-        {/* Mobile search */}
-        <div className="relative mb-5 md:hidden">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
-          <input
-            type="text"
-            placeholder="Buscar cortes..."
-            onChange={e => setSearch(e.target.value)}
-            className="w-full bg-navy border border-white/8 text-white placeholder-white/20 rounded-md pl-9 pr-4 py-2.5 text-sm outline-none focus:border-gold/30 transition-colors"
-          />
-        </div>
-
-        {/* Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-navy rounded-lg aspect-[3/4] animate-pulse" />
+              <div
+                key={i}
+                className="animate-pulse rounded-lg border border-border bg-card"
+              >
+                <div className="aspect-square bg-secondary" />
+                <div className="space-y-3 p-4">
+                  <div className="h-3 w-1/3 rounded bg-secondary" />
+                  <div className="h-4 w-2/3 rounded bg-secondary" />
+                  <div className="h-9 rounded bg-secondary" />
+                </div>
+              </div>
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-16">
-            <p className="text-white/30 text-sm">Erro ao carregar produtos.</p>
-            <p className="text-white/20 text-xs mt-1">Verifique as configurações do Appwrite.</p>
+          <div className="border-y border-border py-20 text-center">
+            <p className="text-lg font-semibold">Não foi possível carregar o catálogo.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Verifique as configurações do Appwrite e tente novamente.
+            </p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-white/30 text-sm">Nenhum produto encontrado.</p>
+          <div className="border-y border-border py-20 text-center">
+            <p className="text-lg font-semibold">Nenhum corte encontrado.</p>
+            <Button
+              variant="link"
+              onClick={() => {
+                setSearch('')
+                setCategory('all')
+              }}
+            >
+              Limpar busca
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {filtered.map(p => <ProductCard key={p.$id} product={p} />)}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {filtered.map(p => (
+              <ProductCard key={p.$id} product={p} />
+            ))}
           </div>
         )}
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-navy border-t border-white/5 mt-16 py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
-            <div className="text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                <Logo size={36} />
-                <div>
-                  <p className="font-display text-gold font-bold tracking-widest text-sm">FORNALHA</p>
-                  <p className="text-[9px] text-gold/30 tracking-widest uppercase">Boutique de Carnes</p>
-                </div>
-              </div>
-              <p className="text-xs text-white/20 max-w-xs mt-3 leading-relaxed">
-                Cortes selecionados com critério. Procedência rastreada, maturação própria e entrega no mesmo dia.
-              </p>
-            </div>
+      {/* FAIXA DE MARCA */}
+      <section className="border-y border-border bg-secondary">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.3fr] lg:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+              Do balcão para a brasa
+            </p>
+            <h2 className="mt-2 font-display text-3xl font-semibold text-gold-200 sm:text-4xl">
+              Escolhido por quem entende de carne.
+            </h2>
+          </div>
+          <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+            Na Fornalha, cada corte é escolhido com atenção à procedência, ao marmoreio e ao ponto
+            perfeito para o preparo. Seu pedido é separado com cuidado e confirmado pessoalmente
+            pela nossa equipe.
+          </p>
+        </div>
+      </section>
 
-            <div className="flex flex-col gap-3 text-sm text-white/40">
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-gold/50 shrink-0 mt-0.5" />
-                <span>Rua Benjamin Capusso, 206 — Vila Curuçá Velha<br />São Paulo · SP · 08031-760</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Clock className="w-4 h-4 text-gold/50 shrink-0" />
-                <span>Segunda a Sábado, 8h às 18h</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-gold/50 shrink-0" />
-                <a
-                  href="https://wa.me/5511952176125"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-gold transition-colors"
-                >
-                  (11) 95217-6125
-                </a>
+      {/* RODAPÉ */}
+      <footer className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr_auto]">
+          <div>
+            <div className="flex items-center gap-3">
+              <Logo size={48} />
+              <div>
+                <p className="font-display text-lg font-semibold leading-none">Fornalha</p>
+                <p className="mt-1 text-xs text-muted-foreground">Boutique de Carnes</p>
               </div>
             </div>
+            <p className="mt-4 max-w-xs text-sm leading-6 text-muted-foreground">
+              Cortes selecionados com critério. Procedência rastreada, maturação própria e entrega
+              no mesmo dia.
+            </p>
+            <a
+              href="https://instagram.com/fornalhaboutique"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-primary"
+            >
+              <InstagramIcon className="size-4" /> @fornalhaboutique
+            </a>
+          </div>
 
-            <div>
+          <div className="flex flex-col gap-4 text-sm text-muted-foreground">
+            <div className="flex items-start gap-3">
+              <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
+              <span className="leading-6">
+                Rua Benjamin Capusso, 206 — Vila Curuçá Velha
+                <br />
+                São Paulo · SP · 08031-760
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Clock className="size-4 shrink-0 text-primary" />
+              <span>Segunda a sábado, 8h às 18h</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Phone className="size-4 shrink-0 text-primary" />
               <a
-                href="https://maps.app.goo.gl/CdknGSixGQ7L7YAR6"
+                href="https://wa.me/5511952176125"
                 target="_blank"
                 rel="noreferrer"
-                className="block w-48 h-28 rounded-lg overflow-hidden border border-white/5 hover:border-gold/20 transition-colors"
+                className="transition hover:text-primary"
               >
-                <iframe
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  allowFullScreen
-                  src="https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=Rua+Benjamin+Capusso,206,São+Paulo"
-                  title="Localização Fornalha"
-                />
+                (11) 95217-6125
               </a>
             </div>
           </div>
-          <div className="border-t border-white/5 mt-10 pt-5 text-center text-xs text-white/15">
-            © 2025 Fornalha Boutique de Carnes. Todos os direitos reservados.
-          </div>
+
+          <a
+            href="https://maps.app.goo.gl/CdknGSixGQ7L7YAR6"
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-32 w-full flex-col justify-between rounded-lg border border-border bg-card p-4 transition hover:border-primary/40 lg:w-56"
+          >
+            <MapPin className="size-5 text-primary" />
+            <span>
+              <span className="block text-sm font-semibold">Ver no mapa</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Vila Curuçá Velha · São Paulo
+              </span>
+            </span>
+          </a>
         </div>
+
+        <p className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Fornalha Boutique de Carnes. Todos os direitos reservados.
+        </p>
       </footer>
-    </div>
+    </main>
   )
 }

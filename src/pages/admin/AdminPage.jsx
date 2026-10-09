@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../../lib/appwrite'
 import { Logo } from '../../components/Logo'
+import { CATEGORIES, CATEGORY_LABEL, UNITS, unitLabel } from '../../lib/catalog'
 import {
   Plus, Pencil, Trash2, LogOut, X, Loader2,
   Package, DollarSign, Tag, ToggleLeft, ToggleRight, ArrowLeft
@@ -13,7 +14,6 @@ const EMPTY = {
   name: '', category: 'bovino', weight: '', description: '',
   price: '', unit: 'kg', badge: '', stock: '', imageUrl: '', order: 0, active: true
 }
-const CATEGORIES = ['bovino','premium','dryaged','kit','suino','embutidos','ofertas']
 const BADGES = ['', 'Top venda', 'Dry Aged', 'Importado', 'Exclusivo', 'Novo', 'Kit', 'Oferta']
 
 function fmt(n) { return 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }
@@ -38,17 +38,17 @@ function ProductModal({ product, onClose, onSave }) {
     }
   }
 
-  const inputCls = "w-full bg-ink border border-white/10 text-white placeholder-white/20 rounded-md px-3 py-2 text-sm outline-none focus:border-gold/40 transition-colors"
-  const labelCls = "block text-xs text-white/40 mb-1"
+  const inputCls = "w-full bg-background border border-border text-foreground placeholder:text-muted-foreground/60 rounded-md px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
+  const labelCls = "block text-xs text-muted-foreground mb-1"
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-navy border border-white/10 rounded-lg w-full max-w-lg my-4">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <h3 className="font-display text-gold font-bold tracking-wide text-sm">
+    <div className="fixed inset-0 bg-overlay z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-card border border-border rounded-lg w-full max-w-lg my-4">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h3 className="font-display text-primary font-bold tracking-wide text-sm">
             {product ? 'Editar produto' : 'Novo produto'}
           </h3>
-          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
         </div>
         <form onSubmit={handleSave} className="p-5 flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
@@ -59,7 +59,7 @@ function ProductModal({ product, onClose, onSave }) {
             <div>
               <label className={labelCls}>Categoria *</label>
               <select value={form.category} onChange={e => set('category', e.target.value)} className={inputCls}>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
             </div>
             <div>
@@ -75,7 +75,7 @@ function ProductModal({ product, onClose, onSave }) {
             <div>
               <label className={labelCls}>Unidade</label>
               <select value={form.unit} onChange={e => set('unit', e.target.value)} className={inputCls}>
-                {['kg','un','kit','500g','300g'].map(u => <option key={u} value={u}>{u}</option>)}
+                {UNITS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
               </select>
             </div>
             <div>
@@ -100,19 +100,19 @@ function ProductModal({ product, onClose, onSave }) {
             </div>
             <div className="flex items-end pb-0.5">
               <label className="flex items-center gap-2 cursor-pointer">
-                <button type="button" onClick={() => set('active', !form.active)} className="text-gold">
-                  {form.active ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8 text-white/20" />}
+                <button type="button" onClick={() => set('active', !form.active)} className="text-primary">
+                  {form.active ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8 text-muted-foreground" />}
                 </button>
-                <span className="text-xs text-white/50">{form.active ? 'Produto ativo' : 'Produto oculto'}</span>
+                <span className="text-xs text-muted-foreground">{form.active ? 'Produto ativo' : 'Produto oculto'}</span>
               </label>
             </div>
           </div>
 
-          <div className="flex gap-2 pt-2 border-t border-white/5">
-            <button type="button" onClick={onClose} className="flex-1 border border-white/10 text-white/50 hover:text-white hover:border-white/20 py-2 rounded-md text-sm transition-colors">
+          <div className="flex gap-2 pt-2 border-t border-border">
+            <button type="button" onClick={onClose} className="flex-1 border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 py-2 rounded-md text-sm transition-colors">
               Cancelar
             </button>
-            <button type="submit" disabled={saving} className="flex-1 flex items-center justify-center gap-2 bg-gold hover:bg-gold-light disabled:opacity-50 text-ink font-bold py-2 rounded-md text-sm transition-colors">
+            <button type="submit" disabled={saving} className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-gold-200 disabled:opacity-50 text-primary-foreground font-bold py-2 rounded-md text-sm transition-colors">
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               Salvar
             </button>
@@ -165,23 +165,20 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-ink">
+    <div className="min-h-screen bg-background">
       {/* Admin Nav */}
-      <header className="sticky top-0 z-40 bg-ink/95 backdrop-blur border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Logo size={32} />
-            <div>
-              <p className="font-display text-gold text-xs font-bold tracking-widest">FORNALHA</p>
-              <p className="text-[9px] text-white/20 tracking-widest uppercase">Painel de gestão</p>
-            </div>
+            <Logo size={40} />
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Painel de gestão</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/30 hidden sm:block">{user?.email}</span>
-            <a href="/" target="_blank" className="flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 border border-white/10 hover:border-white/20 px-2.5 py-1.5 rounded-md transition-all">
+            <span className="text-xs text-muted-foreground hidden sm:block">{user?.email}</span>
+            <a href="/" target="_blank" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border hover:border-primary/40 px-2.5 py-1.5 rounded-md transition-all">
               <ArrowLeft className="w-3 h-3" /> Loja
             </a>
-            <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-white/30 hover:text-red-400 border border-white/10 hover:border-red-500/30 px-2.5 py-1.5 rounded-md transition-all">
+            <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 border border-border hover:border-red-500/40 px-2.5 py-1.5 rounded-md transition-all">
               <LogOut className="w-3 h-3" /> Sair
             </button>
           </div>
@@ -196,10 +193,10 @@ export default function AdminPage() {
             { label: 'Produtos ativos', value: stats.active, icon: Tag },
             { label: 'Sem estoque', value: stats.outOfStock, icon: DollarSign },
           ].map(({ label, value, icon: Icon }) => (
-            <div key={label} className="bg-navy border border-white/5 rounded-lg p-4">
-              <Icon className="w-4 h-4 text-gold/40 mb-2" />
-              <p className="font-display text-2xl font-bold text-gold">{value}</p>
-              <p className="text-xs text-white/30 mt-0.5">{label}</p>
+            <div key={label} className="bg-card border border-border rounded-lg p-4">
+              <Icon className="w-4 h-4 text-primary/60 mb-2" />
+              <p className="font-display text-2xl font-bold text-primary">{value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
             </div>
           ))}
         </div>
@@ -207,83 +204,83 @@ export default function AdminPage() {
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
           <div className="flex gap-2 overflow-x-auto">
-            {['all', ...CATEGORIES].map(c => (
-              <button key={c} onClick={() => setCatFilter(c)}
-                className={`shrink-0 text-xs px-3 py-1.5 rounded-full transition-all ${catFilter === c ? 'bg-gold text-ink font-bold' : 'border border-white/10 text-white/40 hover:text-white'}`}>
-                {c === 'all' ? 'Todos' : c}
+            {[{ id: 'all', label: 'Todos' }, ...CATEGORIES].map(c => (
+              <button key={c.id} onClick={() => setCatFilter(c.id)}
+                className={`shrink-0 text-xs px-3 py-1.5 rounded-md transition-colors ${catFilter === c.id ? 'bg-primary text-primary-foreground font-bold' : 'border border-border text-muted-foreground hover:text-foreground'}`}>
+                {c.label}
               </button>
             ))}
           </div>
           <button
             onClick={() => setModal('new')}
-            className="flex items-center gap-1.5 bg-gold hover:bg-gold-light text-ink font-bold text-sm px-4 py-2 rounded-md transition-colors shrink-0"
+            className="flex items-center gap-1.5 bg-primary hover:bg-gold-200 text-primary-foreground font-bold text-sm px-4 py-2 rounded-md transition-colors shrink-0"
           >
             <Plus className="w-4 h-4" /> Novo produto
           </button>
         </div>
 
         {/* Table */}
-        <div className="bg-navy border border-white/5 rounded-lg overflow-hidden">
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
           {isLoading ? (
-            <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 text-gold/40 animate-spin" /></div>
+            <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 text-primary/60 animate-spin" /></div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 text-white/20 text-sm">Nenhum produto cadastrado ainda.</div>
+            <div className="text-center py-16 text-muted-foreground text-sm">Nenhum produto cadastrado ainda.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/5">
-                    <th className="text-left text-xs text-white/30 font-medium px-4 py-3">Produto</th>
-                    <th className="text-left text-xs text-white/30 font-medium px-4 py-3 hidden md:table-cell">Categoria</th>
-                    <th className="text-left text-xs text-white/30 font-medium px-4 py-3">Preço</th>
-                    <th className="text-left text-xs text-white/30 font-medium px-4 py-3 hidden sm:table-cell">Estoque</th>
-                    <th className="text-left text-xs text-white/30 font-medium px-4 py-3">Status</th>
-                    <th className="text-right text-xs text-white/30 font-medium px-4 py-3">Ações</th>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-xs text-muted-foreground font-medium px-4 py-3">Produto</th>
+                    <th className="text-left text-xs text-muted-foreground font-medium px-4 py-3 hidden md:table-cell">Categoria</th>
+                    <th className="text-left text-xs text-muted-foreground font-medium px-4 py-3">Preço</th>
+                    <th className="text-left text-xs text-muted-foreground font-medium px-4 py-3 hidden sm:table-cell">Estoque</th>
+                    <th className="text-left text-xs text-muted-foreground font-medium px-4 py-3">Status</th>
+                    <th className="text-right text-xs text-muted-foreground font-medium px-4 py-3">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map(p => (
-                    <tr key={p.$id} className="border-b border-white/3 hover:bg-white/2 transition-colors">
+                    <tr key={p.$id} className="border-b border-border hover:bg-secondary transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-8 rounded bg-ink overflow-hidden shrink-0">
+                          <div className="w-10 h-8 rounded bg-background overflow-hidden shrink-0">
                             {p.imageUrl
                               ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                              : <div className="w-full h-full flex items-center justify-center"><Package className="w-3 h-3 text-white/10" /></div>
+                              : <div className="w-full h-full flex items-center justify-center"><Package className="w-3 h-3 text-muted-foreground" /></div>
                             }
                           </div>
                           <div>
-                            <p className="font-medium text-white text-sm">{p.name}</p>
-                            <p className="text-xs text-white/30">{p.weight}</p>
+                            <p className="font-medium text-foreground text-sm">{p.name}</p>
+                            <p className="text-xs text-muted-foreground">{p.weight}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
-                        <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded">{p.category}</span>
+                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">{CATEGORY_LABEL[p.category] ?? p.category}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-display text-gold text-sm font-bold">{fmt(p.price)}</span>
-                        <span className="text-white/30 text-xs ml-1">/{p.unit}</span>
+                        <span className="font-display text-primary text-sm font-bold">{fmt(p.price)}</span>
+                        <span className="text-muted-foreground text-xs ml-1">/{unitLabel(p.unit)}</span>
                       </td>
                       <td className="px-4 py-3 hidden sm:table-cell">
-                        <span className={`text-xs ${p.stock === null || p.stock === undefined ? 'text-white/30' : p.stock <= 0 ? 'text-red-400' : p.stock <= 5 ? 'text-yellow-400' : 'text-emerald-400'}`}>
+                        <span className={`text-xs ${p.stock === null || p.stock === undefined ? 'text-muted-foreground' : p.stock <= 0 ? 'text-red-400' : p.stock <= 5 ? 'text-yellow-400' : 'text-emerald-400'}`}>
                           {p.stock === null || p.stock === undefined ? 'Ilimitado' : p.stock === 0 ? 'Sem estoque' : `${p.stock} un.`}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <button onClick={() => handleToggle(p)} className="transition-colors">
                           {p.active
-                            ? <ToggleRight className="w-6 h-6 text-gold" />
-                            : <ToggleLeft className="w-6 h-6 text-white/20" />
+                            ? <ToggleRight className="w-6 h-6 text-primary" />
+                            : <ToggleLeft className="w-6 h-6 text-muted-foreground" />
                           }
                         </button>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => setModal(p)} className="p-1.5 text-white/30 hover:text-gold hover:bg-gold/10 rounded transition-all">
+                          <button onClick={() => setModal(p)} className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-all">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => handleDelete(p.$id)} className="p-1.5 text-white/30 hover:text-red-400 hover:bg-red-500/10 rounded transition-all">
+                          <button onClick={() => handleDelete(p.$id)} className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-all">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
