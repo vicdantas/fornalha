@@ -212,12 +212,12 @@ export default function StorePage() {
             <div className="flex items-center gap-3">
               <Phone className="size-4 shrink-0 text-primary" />
               <a
-                href="https://wa.me/5511952176125"
+                href="https://wa.me/5511968327641"
                 target="_blank"
                 rel="noreferrer"
                 className="transition hover:text-primary"
               >
-                (11) 95217-6125
+                (11) 96832-7641
               </a>
             </div>
           </div>

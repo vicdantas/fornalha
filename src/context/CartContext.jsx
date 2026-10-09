@@ -31,7 +31,7 @@ export function CartProvider({ children }) {
 
   const checkout = useCallback(() => {
     if (!items.length) return
-    const wa = import.meta.env.VITE_WA_NUMBER || '5511952176125'
+    const wa = import.meta.env.VITE_WA_NUMBER || '5511968327641'
 
     const msg = [
       'Olá, Fornalha! Gostaria de fazer este pedido:',
