@@ -15,8 +15,10 @@ export const TABLE_ID = 'products' // Table ID no Appwrite novo
 export const BUCKET_ID = 'products' // Bucket de fotos: leitura pública, upload só logado
 
 // ── Products (nova API TablesDB) ──
-export async function getProducts(category) {
-  const q = [Query.orderAsc('order'), Query.limit(200), Query.equal('active', true)]
+// A loja vê só os ativos; o admin passa includeInactive para poder religar os ocultos.
+export async function getProducts(category, { includeInactive = false } = {}) {
+  const q = [Query.orderAsc('order'), Query.limit(200)]
+  if (!includeInactive) q.push(Query.equal('active', true))
   if (category && category !== 'all') q.push(Query.equal('category', category))
 
   try {
