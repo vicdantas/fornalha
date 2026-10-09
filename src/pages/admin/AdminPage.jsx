@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 
 const EMPTY = {
-  name: '', category: 'bovino', weight: '', description: '',
+  name: '', brand: '', category: 'bovino', weight: '', description: '',
   price: '', unit: 'kg', badge: '', stock: '', imageUrl: '', order: 0, active: true
 }
 const BADGES = ['', 'Top venda', 'Dry Aged', 'Importado', 'Exclusivo', 'Novo', 'Kit', 'Oferta']
@@ -70,6 +70,10 @@ function ProductModal({ product, onClose, onSave }) {
             <div className="col-span-2">
               <label className={labelCls}>Nome do produto *</label>
               <input type="text" required value={form.name} onChange={e => set('name', e.target.value)} placeholder="Picanha Nelore" className={inputCls} />
+            </div>
+            <div className="col-span-2">
+              <label className={labelCls}>Marca / fornecedor</label>
+              <input type="text" value={form.brand ?? ''} onChange={e => set('brand', e.target.value)} placeholder="Minerva" className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Categoria *</label>
@@ -324,7 +328,7 @@ export default function AdminPage() {
                           </label>
                           <div>
                             <p className="font-medium text-foreground text-sm">{p.name}</p>
-                            <p className="text-xs text-muted-foreground">{p.weight}</p>
+                            <p className="text-xs text-muted-foreground">{[p.brand, p.weight].filter(Boolean).join(' · ')}</p>
                           </div>
                         </div>
                       </td>

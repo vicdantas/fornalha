@@ -59,6 +59,7 @@ export function ProductCard({ product }) {
       <div className="flex flex-1 flex-col p-4">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
           {CATEGORY_LABEL[product.category] ?? product.category}
+          {product.brand && <span className="text-muted-foreground"> · {product.brand}</span>}
         </p>
         <h3 className="mt-1 text-lg font-semibold leading-tight">{product.name}</h3>
         {product.weight && (
