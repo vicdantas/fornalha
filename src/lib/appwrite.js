@@ -1,4 +1,5 @@
-import { Client, Databases, Account, ID, Query } from 'appwrite'
+import { Client, Databases, Account, Storage, ID, Query } from 'appwrite'
+import { compressImage } from './image'
 
 const client = new Client()
   .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1')
@@ -6,10 +7,12 @@ const client = new Client()
 
 export const databases = new Databases(client)
 export const account = new Account(client)
+export const storage = new Storage(client)
 export { ID, Query }
 
 export const DB_ID = import.meta.env.VITE_APPWRITE_DB_ID || ''
 export const TABLE_ID = 'products' // Table ID no Appwrite novo
+export const BUCKET_ID = 'products' // Bucket de fotos: leitura pública, upload só logado
 
 // ── Products (nova API TablesDB) ──
 export async function getProducts(category) {
@@ -49,6 +52,14 @@ export async function deleteProduct(id) {
   } catch {
     return databases.deleteDocument(DB_ID, TABLE_ID, id)
   }
+}
+
+// ── Fotos ──
+// Comprime, envia ao Storage e devolve a URL pública para gravar em imageUrl.
+export async function uploadProductImage(file) {
+  const compressed = await compressImage(file)
+  const created = await storage.createFile(BUCKET_ID, ID.unique(), compressed)
+  return storage.getFileView(BUCKET_ID, created.$id).toString()
 }
 
 // ── Auth ──

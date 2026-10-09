@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
-import { getProducts, createProduct, updateProduct, deleteProduct } from '../../lib/appwrite'
+import { getProducts, createProduct, updateProduct, deleteProduct, uploadProductImage } from '../../lib/appwrite'
 import { Logo } from '../../components/Logo'
 import { CATEGORIES, CATEGORY_LABEL, UNITS, unitLabel } from '../../lib/catalog'
 import {
   Plus, Pencil, Trash2, LogOut, X, Loader2,
-  Package, DollarSign, Tag, ToggleLeft, ToggleRight, ArrowLeft
+  Package, DollarSign, Tag, ToggleLeft, ToggleRight, ArrowLeft, ImagePlus
 } from 'lucide-react'
 
 const EMPTY = {
@@ -21,8 +21,23 @@ function fmt(n) { return 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFrac
 function ProductModal({ product, onClose, onSave }) {
   const [form, setForm] = useState(product || { ...EMPTY })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleImage = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploading(true)
+    try {
+      set('imageUrl', await uploadProductImage(file))
+    } catch (err) {
+      alert('Erro ao enviar a foto: ' + err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -91,8 +106,27 @@ function ProductModal({ product, onClose, onSave }) {
               <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} placeholder="Descreva o corte..." className={inputCls + ' resize-none'} />
             </div>
             <div className="col-span-2">
-              <label className={labelCls}>URL da imagem</label>
-              <input type="url" value={form.imageUrl} onChange={e => set('imageUrl', e.target.value)} placeholder="https://..." className={inputCls} />
+              <label className={labelCls}>Foto</label>
+              <div className="flex items-center gap-3">
+                <div className="w-20 h-20 rounded-md bg-background border border-border overflow-hidden shrink-0 flex items-center justify-center">
+                  {uploading
+                    ? <Loader2 className="w-5 h-5 text-primary/60 animate-spin" />
+                    : form.imageUrl
+                      ? <img src={form.imageUrl} alt="" className="w-full h-full object-cover" />
+                      : <ImagePlus className="w-5 h-5 text-muted-foreground" />}
+                </div>
+                <div className="flex flex-col items-start gap-1.5">
+                  <label className={`cursor-pointer border border-border hover:border-primary/40 text-foreground px-3 py-1.5 rounded-md text-xs transition-colors ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
+                    {form.imageUrl ? 'Trocar foto' : 'Escolher foto'}
+                    <input type="file" accept="image/*" onChange={handleImage} className="sr-only" />
+                  </label>
+                  {form.imageUrl && !uploading && (
+                    <button type="button" onClick={() => set('imageUrl', '')} className="text-xs text-muted-foreground hover:text-red-400 transition-colors">
+                      Remover foto
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
             <div>
               <label className={labelCls}>Ordem de exibição</label>
@@ -112,7 +146,7 @@ function ProductModal({ product, onClose, onSave }) {
             <button type="button" onClick={onClose} className="flex-1 border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 py-2 rounded-md text-sm transition-colors">
               Cancelar
             </button>
-            <button type="submit" disabled={saving} className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-gold-200 disabled:opacity-50 text-primary-foreground font-bold py-2 rounded-md text-sm transition-colors">
+            <button type="submit" disabled={saving || uploading}className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-gold-200 disabled:opacity-50 text-primary-foreground font-bold py-2 rounded-md text-sm transition-colors">
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               Salvar
             </button>
