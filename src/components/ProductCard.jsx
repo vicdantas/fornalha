@@ -1,110 +1,114 @@
-import { Plus, Minus, ShoppingBag } from 'lucide-react'
+import { Minus, Plus, ShoppingBag } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { Button } from './ui/Button'
+import { CATEGORY_LABEL, unitLabel } from '../lib/catalog'
 
 const BADGE_STYLES = {
-  'Top venda': 'bg-gold text-ink',
-  'Dry Aged':  'bg-gold-dark text-gold-light border border-gold/20',
-  'Importado': 'bg-navy-3 text-white/70 border border-white/10',
-  'Exclusivo': 'bg-purple-900/60 text-purple-300 border border-purple-500/20',
-  'Novo':      'bg-emerald-900/60 text-emerald-300 border border-emerald-500/20',
-  'Kit':       'bg-gold/10 text-gold border border-gold/20',
-  'Oferta':    'bg-red-900/60 text-red-300 border border-red-500/20',
+  'Top venda': 'bg-primary text-primary-foreground',
+  'Dry Aged': 'bg-gold-900 text-gold-100',
+  'Importado': 'bg-accent text-foreground/80',
+  'Exclusivo': 'bg-gold-700 text-gold-100',
+  'Novo': 'bg-gold-100 text-primary-foreground',
+  'Kit': 'bg-secondary text-primary ring-1 ring-inset ring-primary/30',
+  'Oferta': 'bg-red-900/70 text-red-200',
 }
 
-const CAT_LABEL = {
-  bovino: 'Bovinos',
-  premium: 'Premium',
-  dryaged: 'Dry Aged',
-  kit: 'Kits',
-  suino: 'Suínos',
-  embutidos: 'Embutidos',
-  ofertas: 'Ofertas',
-}
-
-function fmt(n) {
-  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-}
+const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export function ProductCard({ product }) {
   const { items, addItem, changeQty } = useCart()
-  const cartItem = items.find(i => i.$id === product.$id)
-  const qty = cartItem?.qty ?? 0
-  const isOutOfStock = product.stock !== undefined && product.stock !== null && product.stock <= 0
+  const qty = items.find(i => i.$id === product.$id)?.qty ?? 0
+  const isOutOfStock =
+    product.stock !== undefined && product.stock !== null && product.stock <= 0
 
   return (
-    <div className="bg-navy border border-white/5 rounded-lg overflow-hidden flex flex-col group hover:border-gold/20 transition-colors">
-      {/* Image */}
-      <div className="relative aspect-[4/3] bg-gradient-to-br from-ink to-navy-2 overflow-hidden">
+    <article className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card">
+      <div className="relative aspect-square overflow-hidden bg-secondary">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ShoppingBag className="w-10 h-10 text-white/5" />
+          <div className="flex h-full w-full items-center justify-center">
+            <ShoppingBag className="size-10 text-muted-foreground/20" />
           </div>
         )}
+
         {product.badge && (
-          <span className={`absolute top-2.5 left-2.5 text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded ${BADGE_STYLES[product.badge] || 'bg-gold text-ink'}`}>
+          <span
+            className={`absolute left-3 top-3 rounded-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+              BADGE_STYLES[product.badge] ?? 'bg-primary text-primary-foreground'
+            }`}
+          >
             {product.badge}
           </span>
         )}
+
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <span className="text-white/60 text-xs font-semibold tracking-widest uppercase">Indisponível</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-overlay">
+            <span className="text-xs font-semibold uppercase tracking-widest text-foreground/70">
+              Indisponível
+            </span>
           </div>
         )}
       </div>
 
-      {/* Body */}
-      <div className="p-4 flex flex-col flex-1">
-        <p className="text-[10px] font-semibold tracking-widest uppercase text-gold/60 mb-1">
-          {CAT_LABEL[product.category] || product.category}
+      <div className="flex flex-1 flex-col p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+          {CATEGORY_LABEL[product.category] ?? product.category}
         </p>
-        <h3 className="font-display text-white text-base font-medium tracking-wide leading-tight mb-1">
-          {product.name}
-        </h3>
-        <p className="text-xs text-white/30 mb-2">{product.weight}</p>
-        <p className="text-xs text-white/50 leading-relaxed flex-1 mb-4">{product.description}</p>
+        <h3 className="mt-1 text-lg font-semibold leading-tight">{product.name}</h3>
+        {product.weight && (
+          <p className="mt-1 text-xs text-muted-foreground">{product.weight}</p>
+        )}
+        <p className="mt-1 min-h-10 flex-1 text-sm leading-5 text-muted-foreground">
+          {product.description}
+        </p>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-2 pt-3 border-t border-white/5">
+        <div className="mt-5 flex items-end justify-between border-t border-border pt-4">
           <div>
-            <span className="font-display text-gold font-bold text-lg">R$ {fmt(product.price)}</span>
-            <span className="text-white/30 text-xs ml-1">/{product.unit || 'kg'}</span>
+            <strong className="text-xl font-semibold text-gold-200">{money.format(product.price)}</strong>
+            <span className="ml-1 text-xs text-muted-foreground">/ {unitLabel(product.unit)}</span>
           </div>
-
-          {isOutOfStock ? (
-            <span className="text-xs text-white/20">Sem estoque</span>
-          ) : qty === 0 ? (
-            <button
-              onClick={() => addItem(product)}
-              className="flex items-center gap-1.5 bg-gold/10 hover:bg-gold text-gold hover:text-ink border border-gold/30 hover:border-gold font-semibold text-xs px-3 py-2 rounded-md transition-all"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Adicionar
-            </button>
-          ) : (
-            <div className="flex items-center gap-1 border border-gold/30 rounded-md overflow-hidden">
-              <button
-                onClick={() => changeQty(product.$id, -1)}
-                className="w-8 h-8 flex items-center justify-center text-gold hover:bg-gold/10 transition-colors"
-              >
-                <Minus className="w-3.5 h-3.5" />
-              </button>
-              <span className="w-7 text-center text-sm font-bold text-gold">{qty}</span>
-              <button
-                onClick={() => changeQty(product.$id, 1)}
-                className="w-8 h-8 flex items-center justify-center text-gold hover:bg-gold/10 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
         </div>
+
+        {isOutOfStock ? (
+          <p className="mt-4 flex h-9 items-center justify-center rounded-md border border-border text-xs text-muted-foreground">
+            Sem estoque
+          </p>
+        ) : qty === 0 ? (
+          <Button className="mt-4 w-full" onClick={() => addItem(product)}>
+            <ShoppingBag /> Adicionar
+          </Button>
+        ) : (
+          <div className="mt-4 flex h-9 items-center justify-between rounded-md border border-primary bg-primary/5 px-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => changeQty(product.$id, -1)}
+              aria-label={`Diminuir ${product.name}`}
+              className="text-primary hover:bg-primary/10 hover:text-primary"
+            >
+              <Minus />
+            </Button>
+            <span className="text-sm font-bold">
+              {qty} no pedido
+            </span>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => changeQty(product.$id, 1)}
+              aria-label={`Aumentar ${product.name}`}
+              className="text-primary hover:bg-primary/10 hover:text-primary"
+            >
+              <Plus />
+            </Button>
+          </div>
+        )}
       </div>
-    </div>
+    </article>
   )
 }

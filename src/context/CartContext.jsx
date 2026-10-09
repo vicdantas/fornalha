@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useCallback } from 'react'
 
 const CartContext = createContext(null)
 
+const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
 export function CartProvider({ children }) {
   const [items, setItems] = useState([])
   const [open, setOpen] = useState(false)
@@ -29,14 +31,22 @@ export function CartProvider({ children }) {
 
   const checkout = useCallback(() => {
     if (!items.length) return
-    const WA = import.meta.env.VITE_WA_NUMBER || '5511952176125'
-    let msg = '🥩 *Pedido — Fornalha Boutique de Carnes*\n\n'
-    items.forEach(i => {
-      msg += `• ${i.name} (${i.weight}) × ${i.qty} — R$ ${(i.price * i.qty).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`
-    })
-    msg += `\n*Total estimado: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*`
-    msg += '\n\nOlá! Gostaria de confirmar disponibilidade e frete. Obrigado!'
-    window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, '_blank')
+    const wa = import.meta.env.VITE_WA_NUMBER || '5511952176125'
+
+    const msg = [
+      'Olá, Fornalha! Gostaria de fazer este pedido:',
+      '',
+      ...items.map(i => {
+        const detail = i.weight ? ` (${i.weight})` : ''
+        return `• ${i.qty}x ${i.name}${detail} — ${money.format(i.price * i.qty)}`
+      }),
+      '',
+      `Total estimado: ${money.format(total)}`,
+      '',
+      'Pode confirmar a disponibilidade e o valor final?',
+    ].join('\n')
+
+    window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank')
   }, [items, total])
 
   return (
